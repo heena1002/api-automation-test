@@ -12,17 +12,20 @@ import org.junit.Assert;
 import org.testapi.base.FancodeBase;
 import org.testapi.util.TestUtils;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 public class StepDefinition extends FancodeBase {
     private Response response;
-    //add validation step of validating the status code and  response after making a request
-    // The log().all() method is used to log the details of the request and response for debugging
     List<Integer> fancodeUsers;
     static final String baseUrl = TestUtils.getProperty("test.api.baseurl");
-    //hit the users api and get the list of users from fancode city implement this in base class
-    Map<Integer, String> completedTask;
+    private final String jsonFilePath = TestUtils.getProperty("json.file.path");
+
 
     @Given("User has the todo tasks")
     public void userHasTheTodoTasks() {
@@ -31,7 +34,12 @@ public class StepDefinition extends FancodeBase {
         response = getApiResponse("todos");
         Assert.assertEquals(response.getStatusCode(), 200);
         Assert.assertNotNull(response.body().asString());
-        completedTask = getCompletedTaskCount(response);
+
+        try (FileWriter file = new FileWriter(jsonFilePath)) {
+            file.write(response.asString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @And("User belongs to the city FanCode")
@@ -47,11 +55,20 @@ public class StepDefinition extends FancodeBase {
 
     @Then("User Completed task percentage should be greater than {int}%")
     public void userCompletedTaskPercentageShouldBeGreaterThan(float requiredPercentage) {
+        String todosResponse = null;
+        try {
+            todosResponse = new String(Files.readAllBytes(Paths.get(jsonFilePath)), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Map<Integer, String> completedTask = getCompletedTaskCount(todosResponse);
         boolean flag = true;
         if (!fancodeUsers.isEmpty())
             //logic for checking percentage completed is greater than 50 for fancode users
             for (Integer fancodeUser : fancodeUsers) {
                 String[] taskCount = completedTask.get(fancodeUser).split("\\s+");
+                //calculate percentage of completed task
                 float taskPercentage = (float) (Integer.parseInt(taskCount[1]) * 100 / (Integer.parseInt(taskCount[0]) + Integer.parseInt(taskCount[1])));
                 if (requiredPercentage > taskPercentage) {
                     flag = false;

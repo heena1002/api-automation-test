@@ -10,5 +10,5 @@ import org.junit.runner.RunWith;
         features = "src/test/resources/featurefiles",
         glue = {"org.testapi.stepdefinition"}
 )
-public class JunitRunner {
+public class TestRunner {
 }
