@@ -10,8 +10,8 @@ import static org.testapi.base.CommonRestAssuredMethods.*;
 
 public class FancodeBase {
     static Response response;
-    String todosEndpoint = TestUtils.getProperty("test.api.path.todos");
-    String usersEndpoint = TestUtils.getProperty("test.api.path.users");
+    static final String todosEndpoint = TestUtils.getProperty("test.api.path.todos");
+    static final String usersEndpoint = TestUtils.getProperty("test.api.path.users");
         public Response getApiResponse(String api){
             if(api.equals("todos"))
                 response = fetchResponse("get", todosEndpoint);
